@@ -60,7 +60,7 @@ def get_weather(city: str) -> str:
 MODEL = OpenAIModel(
     client_args={"api_key": LLM_API_KEY, "base_url": LLM_BASE_URL},
     model_id=LLM_MODEL,
-    params={"temperature": 0.4},
+    params={"temperature": 0.4, "reasoning_effort": "low"},
 )
 
 agent = Agent(model=MODEL, tools=[get_weather, tavily, calculator])
