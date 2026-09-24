@@ -109,14 +109,12 @@ def chat(message: str, history: list) -> str:
 
 demo = gr.ChatInterface(
     fn=chat,
-    type="messages",
     title="Strands Travel Planner",
     description=(
         "Tell me a city and I'll check the weather, find 3 attractions, "
         "estimate your costs, and build a one-day itinerary."
     ),
     examples=["Plan a one-day trip to Kathmandu", "Plan a day in Tokyo"],
-    theme=gr.themes.Soft(),
 )
 
 
