@@ -9,13 +9,13 @@ import os
 from dotenv import load_dotenv
 from google import genai
 
-MODEL = "gemini-flash-lite-latest"  # lite alias = highest free-tier rate limit
+from constants import ERR_MISSING_GEMINI_KEY, MODEL
 
 # Load .env from this directory (GEMINI_API_KEY, OPENWEATHER_API_KEY)
 load_dotenv()
 
 if not os.getenv("GEMINI_API_KEY"):
-    raise SystemExit("GEMINI_API_KEY missing — copy .env.example to .env and fill it in.")
+    raise SystemExit(ERR_MISSING_GEMINI_KEY)
 
 client = genai.Client()
 

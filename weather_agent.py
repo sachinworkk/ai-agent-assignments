@@ -12,19 +12,32 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-MODEL = "gemini-flash-lite-latest"
-MAX_TOOL_ROUNDS = 5  # safety cap on the tool-calling loop
-
-LOCATIONS = ["Kathmandu", "Delhi", "London"]
+from constants import (
+    ERR_MISSING_GEMINI_KEY,
+    ERR_MISSING_OPENWEATHER_KEY,
+    LOCATIONS,
+    MAX_TOOL_ROUNDS,
+    MODEL,
+    MSG_AGENT_REQUEST,
+    MSG_AGENT_SUMMARY,
+    MSG_AVERAGE,
+    MSG_COLLECTED,
+    MSG_INCOMPLETE,
+    MSG_ROUND_CAP,
+    MSG_TEMP_LINE,
+    MSG_TOOL_FETCH,
+    PROMPT_TEMPLATE,
+    SYSTEM_INSTRUCTION,
+)
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
 if not GEMINI_API_KEY:
-    raise SystemExit("GEMINI_API_KEY missing — copy .env.example to .env and fill it in.")
+    raise SystemExit(ERR_MISSING_GEMINI_KEY)
 if not OPENWEATHER_API_KEY:
-    raise SystemExit("OPENWEATHER_API_KEY missing — copy .env.example to .env and fill it in.")
+    raise SystemExit(ERR_MISSING_OPENWEATHER_KEY)
 
 client = genai.Client()
 
@@ -38,7 +51,7 @@ def get_current_weather(city: str) -> dict:
     Args:
         city: The city name to look up (e.g. 'Kathmandu', 'London').
     """
-    print(f"[TOOL] Fetching current weather for '{city}'...")
+    print(MSG_TOOL_FETCH.format(city=city))
     try:
         resp = requests.get(
             "https://api.openweathermap.org/data/2.5/weather",
@@ -68,20 +81,13 @@ available_tools = {"get_current_weather": get_current_weather}
 # ---------------------------------------------------------------------------
 def run_weather_agent(cities: list[str]) -> None:
     config = types.GenerateContentConfig(
-        system_instruction=(
-            "You are a weather assistant. You MUST call get_current_weather for "
-            "each requested location, one location at a time. Do not skip any "
-            "location and do not invent temperatures."
-        ),
+        system_instruction=SYSTEM_INSTRUCTION,
         tools=[get_current_weather],
         temperature=0.0,
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
 
-    prompt = (
-        f"What is the current weather in {', '.join(cities)}? "
-        "Call the weather tool for each location one at a time."
-    )
+    prompt = PROMPT_TEMPLATE.format(cities=", ".join(cities))
     contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
 
     weather_results: list[dict] = []
@@ -93,14 +99,14 @@ def run_weather_agent(cities: list[str]) -> None:
         contents.append(response.candidates[0].content)
         function_calls = response.function_calls
         if not function_calls:
-            print("\n--- Agent summary ---")
+            print(MSG_AGENT_SUMMARY)
             print(response.text)
             break
 
         for call in function_calls:
             fn_name = call.name or ""
             fn_args = dict(call.args) if call.args else {}
-            print(f"[AGENT] Requested tool: {fn_name} with args {fn_args}")
+            print(MSG_AGENT_REQUEST.format(fn_name=fn_name, fn_args=fn_args))
             fn = available_tools.get(fn_name)
             result = fn(**fn_args) if fn else {"error": f"Unknown tool '{fn_name}'"}
             if isinstance(result, dict) and "temperature_c" in result:
@@ -116,18 +122,18 @@ def run_weather_agent(cities: list[str]) -> None:
                 )
             )
     else:
-        print("Stopped: reached the tool-round cap without a final answer.")
+        print(MSG_ROUND_CAP)
 
     # Average computed in Python — never trust the LLM with arithmetic.
-    print("\n--- Collected temperatures ---")
+    print(MSG_COLLECTED)
     temps = [w["temperature_c"] for w in weather_results]
     for w in weather_results:
-        print(f"{w['city']}: {w['temperature_c']}°C ({w['conditions']})")
+        print(MSG_TEMP_LINE.format(city=w["city"], temp=w["temperature_c"], conditions=w["conditions"]))
     if len(temps) == len(cities) and temps:
         avg = sum(temps) / len(temps)
-        print(f"\nAverage temperature across {len(temps)} locations: {avg:.2f}°C")
+        print(MSG_AVERAGE.format(count=len(temps), avg=f"{avg:.2f}"))
     else:
-        print(f"\nCould not compute average: got {len(temps)}/{len(cities)} results.")
+        print(MSG_INCOMPLETE.format(got=len(temps), expected=len(cities)))
 
 
 if __name__ == "__main__":
