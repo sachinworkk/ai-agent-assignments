@@ -5,11 +5,16 @@ three specified locations using OpenWeather. The agent makes the weather API
 calls **sequentially**, collects the temperature from each location, and
 calculates and displays the **average temperature** across all three locations.
 
-## Plan
+The whole workflow is a Jupyter notebook: `weather_agent.ipynb`. Open it and run
+the cells top to bottom — each step (config, sanity check, tool, agent loop,
+final run) is explained in markdown with expected output shown inline.
+
+## How it works
 
 - Tool: `get_current_weather(city)` → OpenWeather current-weather API (metric).
-- Agent: Gemini (`gemini-2.0-flash`) with manual function calling
-  (AFC disabled) so each tool call is visible and sequential.
+- Agent: Gemini (`gemini-flash-lite-latest`) with **manual function calling**
+  (AFC disabled), so Gemini returns each tool call and our loop executes it —
+  every call is visible and strictly sequential.
 - Average: computed in Python from the collected tool results, not by the LLM.
 
 ## Setup
@@ -29,5 +34,21 @@ activate — a 401 right after signup is normal.
 ## Usage
 
 ```bash
-python weather_agent.py
+jupyter notebook weather_agent.ipynb
 ```
+
+(If Jupyter isn't installed: `python -m pip install notebook`.)
+
+### Cell-by-cell walkthrough
+
+| Cell | What it does |
+|---|---|
+| 1 (code) | Imports, loads `.env`, checks both API keys are set |
+| 2 (code) | Loads shared config from `constants.py` (model, locations, prompts) |
+| 3 (code) | Sanity check — a minimal chatbot round-trip to verify the Gemini key (was `chatbot.py`) |
+| 4 (code) | Defines `get_current_weather(city)` and calls it directly for one city |
+| 5 (code) | Defines `run_weather_agent()` — the manual sequential tool-calling loop |
+| 6 (code) | Runs the agent on all three locations and prints the average temperature |
+
+Every markdown cell above a code cell explains the step and shows the expected
+output, so a reviewer can follow the workflow without running anything.
