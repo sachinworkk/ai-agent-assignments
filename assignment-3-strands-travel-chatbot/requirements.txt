@@ -1,6 +1,0 @@
-strands-agents
-strands-agents-tools
-gradio
-openai
-python-dotenv
-requests

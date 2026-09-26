@@ -24,14 +24,13 @@ All three assignments in one repository. Each folder is a standalone project wit
    cd assignment-2-strands-travel-planner
    ```
 
-3. **Install dependencies** into a virtual environment:
+3. **Install dependencies** into a virtual environment (from the repo root —
+   one master `requirements.txt` covers all three assignments):
 
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
-   pip install -r requirements.txt        # assignments 2 and 3
-   # assignment 1 has no requirements.txt; use:
-   # pip install google-genai python-dotenv requests
+   pip install -r requirements.txt
    ```
 
 4. **Add your API keys**
