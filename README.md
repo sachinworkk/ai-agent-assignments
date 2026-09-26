@@ -51,9 +51,9 @@ All three assignments in one repository. Each folder is a standalone project wit
    Gradio app. Either way, follow the README inside the folder for the details:
 
    ```bash
-   jupyter notebook weather_agent.ipynb     # assignment 1
-   jupyter notebook travel_planner.ipynb    # assignment 2
-   python src/app.py                        # assignment 3 → http://127.0.0.1:7860
+   jupyter notebook assignment-1-weather-agent-gemini/weather_agent.ipynb     # assignment 1
+   jupyter notebook assignment-2-strands-travel-planner/travel_planner.ipynb  # assignment 2
+   python assignment-3-strands-travel-chatbot/src/app.py                      # assignment 3 → http://127.0.0.1:7860
    ```
 
    (If Jupyter isn't installed: `python -m pip install notebook`.)
