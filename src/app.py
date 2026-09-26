@@ -10,11 +10,23 @@ Model provider: OpenRouter (OpenAI-compatible) using gpt-oss-20b.
 """
 
 import os
+import re
 
 import gradio as gr
 import requests
 from dotenv import load_dotenv
 
+from constants import (
+    CHAT_ERROR,
+    OPENWEATHER_URL,
+    SYSTEM_PROMPT,
+    UI_DESCRIPTION,
+    UI_EXAMPLES,
+    UI_TITLE,
+    WEATHER_NOT_FOUND,
+    WEATHER_SUMMARY,
+    GREETING_PATTERNS,
+)
 from strands import Agent, tool
 from strands.models.openai import OpenAIModel
 from strands.session.file_session_manager import FileSessionManager
@@ -41,21 +53,19 @@ def get_weather(city: str) -> str:
         Human-readable summary of current temperature and conditions.
     """
     resp = requests.get(
-        "https://api.openweathermap.org/data/2.5/weather",
+        OPENWEATHER_URL,
         params={"q": city, "units": "metric", "appid": OPENWEATHER_API_KEY},
         timeout=15,
     )
     if resp.status_code == 404:
-        return f"Weather not found for city '{city}'. Please check the spelling."
+        return WEATHER_NOT_FOUND.format(city=city)
     resp.raise_for_status()
     data = resp.json()
     temp = data["main"]["temp"]
     feels = data["main"]["feels_like"]
     desc = data["weather"][0]["description"]
     name = data["name"]
-    return (
-        f"Current weather in {name}: {temp:.1f}C (feels like {feels:.1f}C), {desc}."
-    )
+    return WEATHER_SUMMARY.format(name=name, temp=temp, feels=feels, desc=desc)
 
 
 # ---------- Agent ----------
@@ -66,29 +76,21 @@ MODEL = OpenAIModel(
     params={"temperature": 0.4, "reasoning_effort": "low"},
 )
 
-SYSTEM_PROMPT = """You are a friendly one-day travel planner chatbot.
-
-When a user names a city (or asks you to plan/adjust a trip), do this in order,
-actually calling the tools:
-1. Use the get_weather tool for the city's current weather.
-2. Use the tavily tool to search "top 3 popular tourist attractions in <city>".
-3. Estimate typical per-person costs in USD (entry fees, local transport,
-   meals) and use the calculator tool to add them into one total.
-4. Reply with a concise one-day itinerary:
-   - Weather line
-   - Morning / Afternoon / Evening schedule naming the 3 attractions
-   - Cost breakdown with the final total
-
-Be conversational on follow-ups: if the user asks to make it cheaper, swap an
-attraction, or change the city, reuse tool results when possible and recompute
-costs with the calculator. If a city is unknown or misspelled, ask the user to
-clarify instead of guessing."""
-
 agent = Agent(
     model=MODEL,
     tools=[get_weather, tavily, calculator],
     system_prompt=SYSTEM_PROMPT,
 )
+
+
+def small_talk_reply(message: str) -> str | None:
+    """Return a canned reply for greetings/small talk, or None to pass to the agent."""
+    text = re.sub(r"[^a-z ]", " ", message.lower()).strip()
+    if not text:
+        return None
+    return next(
+        (reply for phrase, reply in GREETING_PATTERNS if phrase in text), None
+    )
 
 
 def chat(message: str, history: list) -> str:
@@ -99,22 +101,19 @@ def chat(message: str, history: list) -> str:
     """
     del history  # Gradio supplies it; the Strands agent keeps its own context.
     try:
+        reply = small_talk_reply(message)
+        if reply is not None:
+            return reply
         return str(agent(message))
     except Exception as exc:  # noqa: BLE001 - user-facing error handling
-        return (
-            f"Sorry, something went wrong while planning: {exc}\n"
-            "Please try again or name another city."
-        )
+        return CHAT_ERROR.format(exc=exc)
 
 
 demo = gr.ChatInterface(
     fn=chat,
-    title="Strands Travel Planner",
-    description=(
-        "Tell me a city and I'll check the weather, find 3 attractions, "
-        "estimate your costs, and build a one-day itinerary."
-    ),
-    examples=["Plan a one-day trip to Kathmandu", "Plan a day in Tokyo"],
+    title=UI_TITLE,
+    description=UI_DESCRIPTION,
+    examples=UI_EXAMPLES,
 )
 
 
