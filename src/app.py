@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 
 from constants import (
     CHAT_ERROR,
+    GREETING_MAX_WORDS,
+    GREETING_PATTERNS,
     OPENWEATHER_URL,
     SYSTEM_PROMPT,
     UI_DESCRIPTION,
@@ -25,7 +27,6 @@ from constants import (
     UI_TITLE,
     WEATHER_NOT_FOUND,
     WEATHER_SUMMARY,
-    GREETING_PATTERNS,
 )
 from strands import Agent, tool
 from strands.models.openai import OpenAIModel
@@ -84,12 +85,21 @@ agent = Agent(
 
 
 def small_talk_reply(message: str) -> str | None:
-    """Return a canned reply for greetings/small talk, or None to pass to the agent."""
-    text = re.sub(r"[^a-z ]", " ", message.lower()).strip()
-    if not text:
+    """Return a canned reply for greetings/small talk, or None to pass to the agent.
+
+    Greeting phrases must match as whole words ("hi", not the "hi" in
+    "this"), and only in short messages. Off-topic questions are NOT
+    filtered here — the agent's system prompt (TOPIC GUARDRAIL) decides
+    what is on-topic and refuses everything else.
+    """
+    text = re.sub(r"[^a-z ]", " ", message.lower())
+    words = text.split()
+    if len(words) > GREETING_MAX_WORDS:
         return None
+    normalized = " ".join(words)
     return next(
-        (reply for phrase, reply in GREETING_PATTERNS if phrase in text), None
+        (reply for phrase, reply in GREETING_PATTERNS if f" {phrase} " in f" {normalized} "),
+        None,
     )
 
 

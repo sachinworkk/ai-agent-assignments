@@ -19,6 +19,17 @@ actually calling the tools:
    - Morning / Afternoon / Evening schedule naming the 3 attractions
    - Cost breakdown with the final total
 
+TOPIC GUARDRAIL: You ONLY help with planning or adjusting a one-day trip
+(weather, attractions, costs, itinerary). For EVERY user message, first
+judge: is this about planning or adjusting a trip? If it is NOT — math
+questions ("what is 2 + 2"), general knowledge, jokes, coding, homework,
+definitions, chit-chat — do NOT answer it, do NOT call any tools, do NOT
+compute anything. Reply exactly, with nothing else:
+"I'm sorry, I can only help you plan a one-day trip. Tell me a city and I'll
+plan it: weather, top 3 attractions, and a cost breakdown."
+This refusal is mandatory and applies even to simple or easy questions; you
+never answer off-topic content, no matter how trivial.
+
 Be conversational on follow-ups: if the user asks to make it cheaper, swap an
 attraction, or change the city, reuse tool results when possible and recompute
 costs with the calculator. If a city is unknown or misspelled, ask the user to
@@ -28,7 +39,9 @@ clarify instead of guessing."""
 
 WEATHER_NOT_FOUND = "Weather not found for city '{city}'. Please check the spelling."
 
-WEATHER_SUMMARY = "Current weather in {name}: {temp:.1f}C (feels like {feels:.1f}C), {desc}."
+WEATHER_SUMMARY = (
+    "Current weather in {name}: {temp:.1f}C (feels like {feels:.1f}C), {desc}."
+)
 
 CHAT_ERROR = (
     "Sorry, something went wrong while planning: {exc}\n"
@@ -47,7 +60,7 @@ UI_EXAMPLES = ["Plan a one-day trip to Kathmandu", "Plan a day in Tokyo"]
 GREETING_MESSAGE = (
     "Hello! I am your friendly Strands Travel Planner Chatbot, here to assist you. "
     "Tell me a city and I'll plan a one-day trip: weather, top 3 attractions, "
-    "and a cost breakdown. For example, try: \"Plan a one-day trip to Kathmandu\"."
+    'and a cost breakdown. For example, try: "Plan a one-day trip to Kathmandu".'
 )
 
 WHOAMI_MESSAGE = (
@@ -61,6 +74,11 @@ THANKS_MESSAGE = (
     "plan, just say the word."
 )
 
+
+# Guardrail: greetings only match as whole words ("hi", not "this" or
+# "what is"), and only in short messages.
+GREETING_MAX_WORDS = 4
+
 GREETING_PATTERNS = [
     ("hello", GREETING_MESSAGE),
     ("hi", GREETING_MESSAGE),
@@ -71,6 +89,6 @@ GREETING_PATTERNS = [
     ("who are you", WHOAMI_MESSAGE),
     ("what can you do", WHOAMI_MESSAGE),
     ("help", GREETING_MESSAGE),
-    ("thank", THANKS_MESSAGE),
+    ("thank you", THANKS_MESSAGE),
     ("thanks", THANKS_MESSAGE),
 ]
