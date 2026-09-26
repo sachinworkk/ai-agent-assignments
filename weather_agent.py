@@ -23,6 +23,7 @@ from constants import (
     MSG_AVERAGE,
     MSG_COLLECTED,
     MSG_INCOMPLETE,
+    MSG_NO_CONTENT,
     MSG_ROUND_CAP,
     MSG_TEMP_LINE,
     MSG_TOOL_FETCH,
@@ -98,7 +99,7 @@ def run_weather_agent(cities: list[str]) -> None:
         )
         candidate = response.candidates[0] if response.candidates else None
         if candidate is None or candidate.content is None:
-            print(f"Stopped: model returned no content in round {round_no}.")
+            print(MSG_NO_CONTENT.format(round_no=round_no))
             break
         contents.append(candidate.content)
         function_calls = response.function_calls
