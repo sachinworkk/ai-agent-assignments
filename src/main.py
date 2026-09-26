@@ -7,22 +7,25 @@ Builds a one-day travel plan for a given city:
 4. Agent combines everything into a one-day itinerary.
 """
 
-import os
 import sys
 
 import requests
-from dotenv import load_dotenv
+
+from constants import (
+    LLM_API_KEY,
+    LLM_BASE_URL,
+    LLM_MODEL,
+    MODEL_REASONING_EFFORT,
+    MODEL_TEMPERATURE,
+    OPENWEATHER_API_KEY,
+    OPENWEATHER_URL,
+    PROMPT,
+    REQUEST_TIMEOUT_SECONDS,
+)
 
 from strands import Agent, tool
 from strands.models.openai import OpenAIModel
 from strands_tools import calculator, tavily
-
-load_dotenv()
-
-OPENWEATHER_API_KEY = os.environ["OPENWEATHER_API_KEY"]
-LLM_BASE_URL = os.environ["LLM_BASE_URL"]
-LLM_MODEL = os.environ["LLM_MODEL"]
-LLM_API_KEY = os.environ["LLM_API_KEY"] or os.environ.get("OPENROUTER_API_KEY")
 
 
 # ---------- Tools ----------
@@ -38,9 +41,9 @@ def get_weather(city: str) -> str:
         Human-readable summary of current temperature and conditions.
     """
     resp = requests.get(
-        "https://api.openweathermap.org/data/2.5/weather",
+        OPENWEATHER_URL,
         params={"q": city, "units": "metric", "appid": OPENWEATHER_API_KEY},
-        timeout=15,
+        timeout=REQUEST_TIMEOUT_SECONDS,
     )
     if resp.status_code == 404:
         return f"Weather not found for city '{city}'."
@@ -60,25 +63,13 @@ def get_weather(city: str) -> str:
 MODEL = OpenAIModel(
     client_args={"api_key": LLM_API_KEY, "base_url": LLM_BASE_URL},
     model_id=LLM_MODEL,
-    params={"temperature": 0.4, "reasoning_effort": "low"},
+    params={
+        "temperature": MODEL_TEMPERATURE,
+        "reasoning_effort": MODEL_REASONING_EFFORT,
+    },
 )
 
 agent = Agent(model=MODEL, tools=[get_weather, tavily, calculator])
-
-PROMPT = """Plan a one-day trip to {city}.
-
-Follow these steps in order and actually call the tools:
-1. Use the get_weather tool to check the current weather in {city}.
-2. Use the tavily tool to search for "top 3 popular tourist attractions in {city}".
-3. Estimate typical per-person costs in USD (entry fees, local transport,
-   meals) and use the calculator tool to add them into one total.
-4. Combine everything into a concise one-day itinerary:
-   - Weather line
-   - Morning / Afternoon / Evening schedule naming the 3 attractions
-   - Cost breakdown with the final total
-
-Weather and attractions results:
-"""
 
 
 def main() -> None:
