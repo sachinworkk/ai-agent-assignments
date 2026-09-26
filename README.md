@@ -10,9 +10,51 @@ All three assignments in one repository. Each folder is a standalone project wit
 
 ## Running a project
 
-```bash
-cd <assignment-folder>
-cp .env.example .env   # add your API keys
-```
+1. **Clone and enter the repo**
 
-Then follow the README inside that folder.
+   ```bash
+   git clone <repo-url>
+   cd ai-agent-assignments
+   ```
+
+2. **Pick an assignment and enter its folder** (each folder is standalone —
+   you don't need to install anything from the other assignments):
+
+   ```bash
+   cd assignment-2-strands-travel-planner
+   ```
+
+3. **Install dependencies** into a virtual environment:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt        # assignments 2 and 3
+   # assignment 1 has no requirements.txt; use:
+   # pip install google-genai python-dotenv requests
+   ```
+
+4. **Add your API keys**
+
+   ```bash
+   cp .env.example .env   # then fill in the keys
+   ```
+
+   Every assignment needs:
+
+   - `OPENWEATHER_API_KEY` — https://openweathermap.org/api (free; new keys take
+     ~10 min to a couple of hours to activate — a 401 right after signup is normal)
+   - `TAVILY_API_KEY` — https://tavily.com (free) — assignments 2 and 3
+   - An LLM key: `GEMINI_API_KEY` for assignment 1 (https://aistudio.google.com),
+     `OPENROUTER_API_KEY` (https://openrouter.ai) for assignments 2 and 3
+
+5. **Run it** — assignments 1 and 2 are Jupyter notebooks, assignment 3 is a
+   Gradio app. Either way, follow the README inside the folder for the details:
+
+   ```bash
+   jupyter notebook weather_agent.ipynb     # assignment 1
+   jupyter notebook travel_planner.ipynb    # assignment 2
+   python src/app.py                        # assignment 3 → http://127.0.0.1:7860
+   ```
+
+   (If Jupyter isn't installed: `python -m pip install notebook`.)
