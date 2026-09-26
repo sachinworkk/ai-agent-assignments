@@ -96,7 +96,11 @@ def run_weather_agent(cities: list[str]) -> None:
         response = client.models.generate_content(
             model=MODEL, contents=contents, config=config
         )
-        contents.append(response.candidates[0].content)
+        candidate = response.candidates[0] if response.candidates else None
+        if candidate is None or candidate.content is None:
+            print(f"Stopped: model returned no content in round {round_no}.")
+            break
+        contents.append(candidate.content)
         function_calls = response.function_calls
         if not function_calls:
             print(MSG_AGENT_SUMMARY)
