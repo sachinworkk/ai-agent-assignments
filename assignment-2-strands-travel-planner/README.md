@@ -21,7 +21,7 @@ explained in markdown with expected output shown inline.
 
 ```bash
 pip install strands-agents strands-agents-tools requests
-cp .env.example .env   # then fill in your keys
+cp ../.env.example ../.env   # then fill in your keys (shared, at the repo root)
 ```
 
 ## Usage

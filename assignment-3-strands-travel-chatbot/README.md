@@ -18,7 +18,7 @@ Strands Agents with OpenRouter (OpenAI-compatible endpoint), default model `open
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # then fill in the keys
+cp ../.env.example ../.env   # then fill in the keys (shared, at the repo root)
 python src/app.py
 ```
 

@@ -23,7 +23,7 @@ final run) is explained in markdown with expected output shown inline.
 python -m pip install google-genai python-dotenv requests
 ```
 
-Create a `.env` file (see `.env.example`) with:
+Create a `.env` file at the repo root (see `../.env.example`) with:
 
 - `GEMINI_API_KEY`
 - `OPENWEATHER_API_KEY`
